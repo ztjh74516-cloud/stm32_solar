@@ -1,0 +1,48 @@
+# dot files
+/.vscode/launch.json
+/.vscode/c_cpp_properties.json
+/.vscode/*.log
+/.vscode/*.lock
+/.settings
+/.eide/log
+/.eide.usr.ctx.json
+
+# project out
+/build
+/bin
+/obj
+/out
+
+# eide template
+*.ept
+*.eide-template
+
+
+
+
+Objects/
+Listings/
+Output Files/
+*.o
+*.d
+*.crf
+*.map
+*.axf
+*.elf
+*.hex
+*.bin
+
+
+*.uvoptx
+*.uvguix.*
+*.scvd
+# EIDE 自动提取的芯片支持包环境
+.cmsis/
+# ================= 杂项与冗余备份屏蔽 =================
+
+# 物理备份目录
+Backups/
+Backup/
+
+# 多媒体与脚本输出缓存
+/.video_frames/

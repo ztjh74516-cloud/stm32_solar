@@ -1,0 +1,13 @@
+# Normalize text files in the repository while preserving the native line
+# endings expected by Windows batch files and Keil project files.
+* text=auto
+
+*.c text eol=lf
+*.h text eol=lf
+*.s text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.bat text eol=crlf
+*.uvprojx text eol=crlf
