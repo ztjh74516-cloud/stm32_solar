@@ -6,6 +6,7 @@
 #include "Key.h"
 #include "Alarm.h"
 #include "Serial.h"
+#include "Telemetry.h"
 #include <stdio.h> 
 #include <stdlib.h> 
 
@@ -65,6 +66,7 @@ int main(void) {
     float pv_v = 0.0f;  // 光伏输入电压
     float pv_c = 0.0f;  // 光伏输入电流 
     float pv_p = 0.0f;  // 【新增】光伏输入功率
+    float ina_bus_v = 0.0f; // INA219 VIN- 侧母线电压
     float out_v = 0.0f; // 继电器输出电压
     float out_c = 0.0f; // 继电器输出电流
     float th_v = 1.00f; // 电压保护阈值
@@ -132,6 +134,7 @@ int main(void) {
             /* 光伏/外部电源电压由继电器前端的 PA0 分压模块测量，
              * 避免继电器断开后 INA219 VIN- 悬空产生假电压。 */
             pv_v = PV_Get_Real_Voltage();
+            ina_bus_v = INA219_GetBusVoltage();
             shunt_raw = INA219_GetShuntRaw();
             pv_c = ((float)shunt_raw * 0.00001f) / 0.1f;
             if (pv_c < 0) pv_c = 0; 
@@ -151,7 +154,7 @@ int main(void) {
                 Alarm_Set(0); 
                 relay_status = 1;
                 Relay_Set(relay_status);
-                out_v = pv_v; 
+                out_v = ina_bus_v;
                 out_c = pv_c; 
             }
             t_alarm = sys_tick;
@@ -178,17 +181,13 @@ int main(void) {
 
         /* 【任务 5】：更新串口协议 (500ms) */
         if (sys_tick - t_serial >= 500) {
-            char tx_buf[80];
-            /* 将电流(I)和功率(P)放大 1000 倍，以 mA 和 mW 的整数形式输出 */
-            sprintf(tx_buf, "V:%d.%02d, I:%d, SH:%d, P:%d, TH:%d.%02d, RLY:%s\r\n", 
-                    FLOAT_I(pv_v), FLOAT_F(pv_v), 
-                    (int)(pv_c * 1000), 
-                    (int)shunt_raw,
-                    (int)(pv_p * 1000), 
-                    FLOAT_I(th_v), FLOAT_F(th_v), 
-                    relay_status ? "ON" : "OFF");
+            char tx_buf[TELEMETRY_BUFFER_SIZE];
+            /* I/OUT_I 单位为 mA，P 单位为 mW；断开时输出侧数据固定为 0。 */
+            Telemetry_Format(tx_buf, pv_v, pv_c, out_v, out_c,
+                             shunt_raw, pv_p, th_v, relay_status);
             Serial_SendString(tx_buf);
             t_serial = sys_tick;
         }
     }
 }
+RC

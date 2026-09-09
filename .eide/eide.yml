@@ -88,6 +88,8 @@ virtualFolder:
         - path: Hardware/Serial.h
         - path: Hardware/INA219.c
         - path: Hardware/INA219.h
+        - path: Hardware/Telemetry.c
+        - path: Hardware/Telemetry.h
       folders: []
     - name: User
       files:
@@ -112,6 +114,7 @@ targets:
         - User
         - System
         - Hardware
+        - ../../../../Keil_v5/ARM/ARMCC/include
         - .cmsis/include
         - RTE/_Target 1
       libList: []

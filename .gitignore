@@ -46,3 +46,29 @@ Backup/
 
 # 多媒体与脚本输出缓存
 /.video_frames/
+
+# Python 上位机：缓存、虚拟环境与本机密钥
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.env
+.env.*
+!.env.example
+
+# 上位机打包产物（保留 .spec 打包配置文件）
+/上位机/build/
+/上位机/dist/
+*.egg-info/
+
+# 本机 Codex 配置与自动生成的代理工作文档
+/.codex/
+/docs/superpowers/
