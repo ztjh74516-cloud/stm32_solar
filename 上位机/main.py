@@ -89,6 +89,11 @@ def main():
     data_manager = DataManager()
     window = MainWindow(serial_handler, data_manager)
 
+    # 注册退出清理钩子：确保无论点击右上角叉号、快捷键退出或程序意外终止，串口都能 100% 释放
+    import atexit
+    atexit.register(serial_handler.disconnect)
+    app.aboutToQuit.connect(serial_handler.disconnect)
+
     def show_main():
         splash.close()
         window.show()
