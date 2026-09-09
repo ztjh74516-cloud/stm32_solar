@@ -25,6 +25,33 @@ class DataCard(QFrame):
         super().__init__(parent)
         self.accent_color = accent_color
         self.unit = unit
+        self.setMinimumHeight(105)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 10, 12, 10)
+        layout.setSpacing(3)
+
+        # 标题栏 (纯文本，无表情符)
+        self.title_label = QLabel(title)
+        self.title_label.setFont(QFont("Microsoft YaHei UI", 9))
+        self.title_label.setStyleSheet("color: #5E6977; border: none; background: transparent;")
+        layout.addWidget(self.title_label)
+
+        # 核心数值
+        self.value_label = QLabel("--")
+        self.value_label.setFont(QFont("Segoe UI", 21, QFont.Bold))
+        layout.addWidget(self.value_label)
+
+        # 物理单位/说明
+        self.unit_label = QLabel(unit)
+        self.unit_label.setFont(QFont("Microsoft YaHei UI", 8))
+        self.unit_label.setStyleSheet("color: #8C96A4; border: none; background: transparent;")
+        layout.addWidget(self.unit_label)
+
+        self.set_accent_color(accent_color)
+
+    def set_accent_color(self, accent_color: str):
+        self.accent_color = accent_color
         self.setStyleSheet(f"""
             QFrame {{
                 background-color: #FFFFFF;
@@ -33,35 +60,17 @@ class DataCard(QFrame):
                 border-top: 3px solid {accent_color};
             }}
         """)
-        self.setMinimumHeight(110)
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 12, 14, 12)
-        layout.setSpacing(4)
-
-        # 标题栏 (纯文本，无表情符)
-        self.title_label = QLabel(title)
-        self.title_label.setFont(QFont("Microsoft YaHei UI", 10))
-        self.title_label.setStyleSheet("color: #5E6977; border: none;")
-        layout.addWidget(self.title_label)
-
-        # 核心数值
-        self.value_label = QLabel("--")
-        self.value_label.setFont(QFont("Segoe UI", 24, QFont.Bold))
-        self.value_label.setStyleSheet(f"color: {accent_color}; border: none; font-weight: bold;")
-        layout.addWidget(self.value_label)
-
-        # 物理单位/说明
-        self.unit_label = QLabel(unit)
-        self.unit_label.setFont(QFont("Microsoft YaHei UI", 9))
-        self.unit_label.setStyleSheet("color: #8C96A4; border: none;")
-        layout.addWidget(self.unit_label)
+        self.value_label.setStyleSheet(f"color: {accent_color}; border: none; background: transparent; font-weight: bold;")
 
     def set_value(self, value):
         if isinstance(value, float):
             self.value_label.setText(f"{value:.2f}")
         else:
             self.value_label.setText(str(value))
+
+    def set_unit(self, unit: str):
+        self.unit = unit
+        self.unit_label.setText(unit)
 
 
 class DashboardTab(QWidget):
@@ -241,57 +250,49 @@ class DashboardTab(QWidget):
         line.setStyleSheet("background-color: #E5E7EB; max-height: 1px;")
         main_layout.addWidget(line)
 
-        # ===== 核心数据卡片 (低饱和度色系) =====
+        # ===== 核心数据卡片 (低饱和度色系，一行4个) =====
         cards_layout = QGridLayout()
         cards_layout.setHorizontalSpacing(10)
         cards_layout.setVerticalSpacing(8)
 
-        # 输入电压、电流、功率
+        # 第一行: 输入电压、电流、功率、累计电量
         self.card_voltage = DataCard("输入电压 (V)", "伏特", "#4A6FA5")
         self.card_current = DataCard("输入电流 (I)", "毫安", "#5C8D89")
         self.card_power = DataCard("输出功率 (P)", "毫瓦", "#C48A54")
+        self.card_energy = DataCard("累计电量 (E)", "毫瓦时 (mWh)", "#2A8C82")
 
-        # 阈值、采样、继电器
+        # 第二行: 阈值、采样、继电器、预留占位卡片
         self.card_threshold = DataCard("保护阈值 (TH)", "伏特", "#7A6F8D")
         self.card_shunt = DataCard("分流采样 (SH)", "计数值", "#64748B")
 
-        # 继电器状态卡片
-        self.relay_card = QFrame()
-        self.relay_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 1px solid #E5E7EB;
-                border-radius: 6px;
-                border-top: 3px solid #64748B;
-            }
-        """)
-        self.relay_card.setMinimumHeight(110)
-        relay_card_layout = QVBoxLayout(self.relay_card)
-        relay_card_layout.setContentsMargins(14, 12, 14, 12)
-        relay_card_layout.setSpacing(4)
+        # 继电器状态卡片 (统一使用 DataCard，确保边框与卡片样式一致)
+        self.relay_card = DataCard("继电器状态 (RLY)", "过压保护动作开关", "#BA5B55")
+        self.relay_card.set_value("OFF")
+        self.relay_status_label = self.relay_card.value_label
+        self.relay_sub_label = self.relay_card.unit_label
 
-        relay_title = QLabel("继电器状态 (RLY)")
-        relay_title.setFont(QFont("Microsoft YaHei UI", 10))
-        relay_title.setStyleSheet("color: #5E6977; border: none;")
-        relay_card_layout.addWidget(relay_title)
+        # 预留占位卡片 (第二行第4个，统一使用 DataCard，确保边框一致)
+        self.card_placeholder = DataCard("系统扩展通道", "预留扩展通道", "#9CA3AF")
+        self.card_placeholder.set_value("待添加")
+        self.card_placeholder.value_label.setFont(QFont("Microsoft YaHei UI", 18, QFont.Bold))
+        self.ph_value_label = self.card_placeholder.value_label
+        self.ph_sub_label = self.card_placeholder.unit_label
 
-        self.relay_status_label = QLabel("OFF")
-        self.relay_status_label.setFont(QFont("Segoe UI", 24, QFont.Bold))
-        self.relay_status_label.setStyleSheet("color: #BA5B55; border: none; font-weight: bold;")
-        relay_card_layout.addWidget(self.relay_status_label)
-
-        self.relay_sub_label = QLabel("过压保护动作开关")
-        self.relay_sub_label.setFont(QFont("Microsoft YaHei UI", 9))
-        self.relay_sub_label.setStyleSheet("color: #8C96A4; border: none;")
-        relay_card_layout.addWidget(self.relay_sub_label)
-
-        # 栅格布局
+        # 栅格布局 (2行4列)
         cards_layout.addWidget(self.card_voltage, 0, 0)
         cards_layout.addWidget(self.card_current, 0, 1)
         cards_layout.addWidget(self.card_power, 0, 2)
+        cards_layout.addWidget(self.card_energy, 0, 3)
+
         cards_layout.addWidget(self.card_threshold, 1, 0)
         cards_layout.addWidget(self.card_shunt, 1, 1)
         cards_layout.addWidget(self.relay_card, 1, 2)
+        cards_layout.addWidget(self.card_placeholder, 1, 3)
+
+        cards_layout.setColumnStretch(0, 1)
+        cards_layout.setColumnStretch(1, 1)
+        cards_layout.setColumnStretch(2, 1)
+        cards_layout.setColumnStretch(3, 1)
 
         main_layout.addLayout(cards_layout)
 
@@ -529,6 +530,21 @@ class DashboardTab(QWidget):
         if 'power' in data:
             self.card_power.set_value(data['power'])
 
+        # 累计发电量更新
+        mwh = None
+        if 'energy_mwh' in data:
+            mwh = float(data['energy_mwh'])
+        elif self.data_manager and hasattr(self.data_manager, 'get_total_energy_mwh'):
+            mwh = self.data_manager.get_total_energy_mwh()
+
+        if mwh is not None:
+            if mwh < 1000.0:
+                self.card_energy.set_value(f"{mwh:.2f}")
+                self.card_energy.set_unit("毫瓦时 (mWh)")
+            else:
+                self.card_energy.set_value(f"{mwh / 1000.0:.3f}")
+                self.card_energy.set_unit("瓦时 (Wh)")
+
         if 'threshold' in data:
             self.card_threshold.set_value(data['threshold'])
 
@@ -537,11 +553,11 @@ class DashboardTab(QWidget):
 
         if 'relay' in data:
             rly = str(data['relay']).upper()
-            self.relay_status_label.setText(rly)
+            self.relay_card.set_value(rly)
             if rly == 'ON':
-                self.relay_status_label.setStyleSheet("color: #548C72; border: none; font-weight: bold;")
+                self.relay_card.set_accent_color("#548C72")
             else:
-                self.relay_status_label.setStyleSheet("color: #BA5B55; border: none; font-weight: bold;")
+                self.relay_card.set_accent_color("#BA5B55")
 
     def append_terminal_line(self, line: str, is_send: bool = False):
         if not self.is_monitoring and not is_send:

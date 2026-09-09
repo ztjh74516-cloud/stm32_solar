@@ -14,6 +14,7 @@ from ui.dashboard_tab import DashboardTab
 from ui.history_tab import HistoryTab
 from ui.settings_tab import SettingsTab
 from ui.curves_tab import CurvesTab
+from version import VERSION
 
 
 class MainWindow(QMainWindow):
@@ -125,6 +126,21 @@ class MainWindow(QMainWindow):
             }
         """)
         self.statusBar().showMessage("就绪 | 请选择串口点击连接或启动模拟模式")
+
+        # 状态栏最最最右下角永久版本号标签
+        self.version_label = QLabel(VERSION)
+        self.version_label.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        self.version_label.setStyleSheet("""
+            QLabel {
+                color: #8C96A4;
+                padding-left: 10px;
+                padding-right: 6px;
+                border-left: 1px solid #E5E7EB;
+                background: transparent;
+            }
+        """)
+        self.version_label.setToolTip(f"当前上位机系统版本: {VERSION}")
+        self.statusBar().addPermanentWidget(self.version_label)
 
         # 时间定时器
         self.time_timer = QTimer(self)

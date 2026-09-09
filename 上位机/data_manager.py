@@ -33,6 +33,7 @@ class DataManager:
         "分流采样值(SH)",
         "保护阈值(TH/V)",
         "继电器状态(RLY)",
+        "累计电量(mWh)",
     ]
 
     PRIMARY_COLOR = "2196F3"
@@ -44,6 +45,19 @@ class DataManager:
         self._records: List[Dict[str, Any]] = []
         self._lock = threading.Lock()
         self._max_records = max_records
+        self._total_energy_mwh: float = 0.0
+        self._last_energy_ts: Optional[datetime] = None
+
+    def get_total_energy_mwh(self) -> float:
+        """获取累计发电量 (mWh)"""
+        with self._lock:
+            return self._total_energy_mwh
+
+    def reset_energy(self) -> None:
+        """重置累计电量"""
+        with self._lock:
+            self._total_energy_mwh = 0.0
+            self._last_energy_ts = None
 
     def add_record(self, data_dict: Dict[str, Any]) -> Dict[str, Any]:
         ts = data_dict.get("timestamp")
@@ -74,6 +88,19 @@ class DataManager:
         threshold = _safe_float("threshold", 10.0)
         relay = str(data_dict.get("relay", "OFF")).upper()
 
+        # 计算累计发电量 (mWh)
+        with self._lock:
+            if self._last_energy_ts is not None:
+                dt = (ts - self._last_energy_ts).total_seconds()
+                if 0 < dt <= 5.0:
+                    delta_mwh = (power * dt) / 3600.0
+                    if delta_mwh > 0:
+                        self._total_energy_mwh += delta_mwh
+            self._last_energy_ts = ts
+            current_energy_mwh = round(self._total_energy_mwh, 2)
+
+        data_dict["energy_mwh"] = current_energy_mwh
+
         record: Dict[str, Any] = {
             "timestamp": ts,
             "voltage": voltage,
@@ -82,6 +109,7 @@ class DataManager:
             "shunt": shunt,
             "threshold": threshold,
             "relay": relay,
+            "energy_mwh": current_energy_mwh,
         }
 
         with self._lock:
@@ -171,6 +199,7 @@ class DataManager:
                 (r.get("shunt", 0), align_right, "0"),
                 (r.get("threshold", 0.0), align_right, "0.00"),
                 (r.get("relay", "OFF"), align_center, None),
+                (r.get("energy_mwh", 0.0), align_right, "0.00"),
             ]
 
             for col_idx, (val, alignment, num_format) in enumerate(row_data, start=1):

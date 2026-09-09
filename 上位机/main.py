@@ -18,6 +18,7 @@ from serial_handler import SerialHandler
 from data_manager import DataManager
 from styles import get_main_stylesheet
 from ui.main_window import MainWindow
+from version import VERSION
 
 
 def create_splash_pixmap():
@@ -63,7 +64,7 @@ def create_splash_pixmap():
     painter.setPen(QColor("#9CA3AF"))
     painter.setFont(QFont("Segoe UI", 9))
     painter.drawText(pixmap.rect().adjusted(0, 0, -16, -12),
-                     Qt.AlignRight | Qt.AlignBottom, "v1.1.0")
+                     Qt.AlignRight | Qt.AlignBottom, VERSION)
 
     painter.end()
     return pixmap
